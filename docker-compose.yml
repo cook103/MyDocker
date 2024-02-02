@@ -1,0 +1,45 @@
+version: "3.6"
+
+services:
+  homer:
+    image: b4bz/homer
+    container_name: homer-host
+    user: 1000:1000
+    hostname: homer
+    volumes:
+      - '/Services/Homer/homer_data:/www/assets'
+    ports:
+      - 8080:8080
+    restart: 'unless-stopped'
+  
+  pihole:
+    container_name: pihole-host
+    image: pihole/pihole:latest
+    # For DHCP it is recommended to remove these ports and instead add: network_mode: "host"
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "67:67/udp"
+      - "80:80/tcp"
+    environment:
+      TZ: 'America/California'
+      WEBPASSWORD: 'password'
+    # Volumes store your data between container upgrades
+    volumes:
+      - '/Services/Pihole/etc-pihole:/etc/pihole'
+      - '/Services/Pihole/etc-dnsmasq.d:/etc/dnsmasq.d'
+    #   https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
+    cap_add:
+      - NET_ADMIN
+    restart: 'unless-stopped' # Recommended but not required (DHCP needs NET_ADMIN) 
+  
+  jellyfin:
+    image: jellyfin/jellyfin
+    container_name: jellyfin-host
+    user: 1000:1000
+    network_mode: 'host'
+    volumes: 
+      - '/Services/Jellyfin/config:/config'
+      - '/Services/Jellyfin/cache:/cache'
+      - '/Services/Jellyfin/media/:/media'
+    restart: 'unless-stopped'
